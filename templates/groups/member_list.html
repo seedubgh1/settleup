@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Members — {{ group.name }} — SettleUp{% endblock %}
+{% block page_title %}Members{% endblock %}
+{% block nav_members %}active{% endblock %}
+{% block header_actions %}
+  {% if group_member.role != 'member' %}
+  <a href="{% url 'member_invite' group_id=group.pk %}" class="btn-primary text-sm">+ Invite Member</a>
+  {% endif %}
+{% endblock %}
+{% block content %}
+
+{% comment %} Build a balance lookup dict {% endcomment %}
+{% for entry in balances %}
+  {% comment %} balances is a list of dicts, we display inline {% endcomment %}
+{% endfor %}
+
+<div class="card">
+  <div class="divide-y divide-surface-border">
+    {% for membership in memberships %}
+    <div class="flex items-center gap-4 px-6 py-4">
+      <div class="w-9 h-9 rounded-full bg-accent-dim flex items-center justify-center text-accent text-sm font-bold flex-shrink-0">
+        {{ membership.user.first_name|first|upper }}{{ membership.user.last_name|first|upper }}
+      </div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <p class="text-sm font-semibold text-ink">{{ membership.user.get_full_name }}</p>
+          <span class="tag tag-{{ membership.role }}">{{ membership.get_role_display }}</span>
+          <span class="tag tag-{{ membership.status }}">{{ membership.get_status_display }}</span>
+        </div>
+        <p class="text-xs text-ink-dim">{{ membership.user.email }} · {{ membership.default_percentage }}% default share</p>
+      </div>
+      <!-- Balance for this member -->
+      {% for entry in balances %}
+        {% if entry.member.pk == membership.pk %}
+        <div class="text-right mr-4">
+          <p class="text-xs text-ink-dim mb-0.5">Balance</p>
+          <p class="text-sm font-mono font-semibold
+            {% if entry.balance > 0 %}balance-owe
+            {% elif entry.balance < 0 %}balance-owed
+            {% else %}balance-zero{% endif %}">
+            {% if entry.balance == 0 %}$0.00
+            {% elif entry.balance > 0 %}+${{ entry.balance }}
+            {% else %}-${{ entry.balance|slice:"1:" }}{% endif %}
+          </p>
+        </div>
+        {% endif %}
+      {% endfor %}
+      <!-- Actions -->
+      {% if group_member.role == 'owner' or group_member.role == 'admin' %}
+      {% if membership.pk != group_member.pk %}
+      <div class="flex items-center gap-2">
+        <a href="{% url 'member_edit' group_id=group.pk member_id=membership.pk %}"
+           class="text-xs text-ink-dim hover:text-ink transition-colors px-2 py-1 rounded hover:bg-surface-border">
+          Edit
+        </a>
+        {% if membership.status == 'active' %}
+        <form method="post" action="{% url 'member_deactivate' group_id=group.pk member_id=membership.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="text-xs text-red-400 hover:text-red-300 transition-colors px-2 py-1 rounded hover:bg-surface-border"
+                  onclick="return confirm('Deactivate {{ membership.user.get_full_name }}?')">
+            Deactivate
+          </button>
+        </form>
+        {% endif %}
+      </div>
+      {% endif %}
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% if group_member.role == 'owner' or group_member.role == 'admin' %}
+<div class="flex gap-3 mt-4">
+  <a href="{% url 'member_rebalance' group_id=group.pk %}" class="btn-secondary text-sm">Rebalance Percentages</a>
+  {% if group_member.role == 'owner' %}
+  <a href="{% url 'group_transfer_ownership' group_id=group.pk %}" class="btn-secondary text-sm">Transfer Ownership</a>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

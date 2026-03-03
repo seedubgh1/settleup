@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Edit Member — SettleUp{% endblock %}
+{% block page_title %}Edit Member{% endblock %}
+{% block nav_members %}active{% endblock %}
+{% block content %}
+<div class="max-w-md">
+  <div class="card p-6">
+    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-surface-border">
+      <div class="w-10 h-10 rounded-full bg-accent-dim flex items-center justify-center text-accent font-bold">
+        {{ member.user.first_name|first|upper }}{{ member.user.last_name|first|upper }}
+      </div>
+      <div>
+        <p class="font-semibold text-ink">{{ member.user.get_full_name }}</p>
+        <p class="text-xs text-ink-dim">{{ member.user.email }}</p>
+      </div>
+    </div>
+    <form method="post" class="space-y-5">
+      {% csrf_token %}
+      <div>
+        <label class="form-label">Role</label>
+        <select name="role" class="form-input">
+          {% for value, label in form.fields.role.choices %}
+            {% if value != 'owner' %}
+            <option value="{{ value }}" {% if form.role.value == value %}selected{% endif %}>{{ label }}</option>
+            {% endif %}
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Default Percentage</label>
+        <div class="relative">
+          <input type="number" name="default_percentage" step="0.01" min="0.01" max="100"
+                 class="form-input pr-8"
+                 value="{{ form.default_percentage.value|default:'' }}" />
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-ink-dim text-sm">%</span>
+        </div>
+        {% if form.default_percentage.errors %}<p class="text-xs text-red-400 mt-1">{{ form.default_percentage.errors|join:", " }}</p>{% endif %}
+        <p class="text-xs text-ink-dim mt-1">Remember to rebalance all members so percentages sum to 100.</p>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="btn-primary">Save changes</button>
+        <a href="{% url 'member_list' group_id=group.pk %}" class="btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

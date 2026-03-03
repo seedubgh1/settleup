@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}My Groups — SettleUp{% endblock %}
+{% block page_title %}My Groups{% endblock %}
+{% block nav_groups %}active{% endblock %}
+{% block header_actions %}
+  <a href="{% url 'group_create' %}" class="btn-primary text-sm">+ New Group</a>
+{% endblock %}
+{% block content %}
+{% if memberships %}
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+  {% for membership in memberships %}
+  <a href="{% url 'group_detail' group_id=membership.group.pk %}"
+     class="card p-6 block hover:border-accent transition-colors group">
+    <div class="flex items-start justify-between mb-4">
+      <div class="w-10 h-10 rounded-lg bg-accent-dim flex items-center justify-center text-accent font-bold text-lg font-display">
+        {{ membership.group.name|first|upper }}
+      </div>
+      <span class="tag tag-{{ membership.role }}">{{ membership.get_role_display }}</span>
+    </div>
+    <h3 class="font-semibold text-ink text-base group-hover:text-accent transition-colors mb-1">
+      {{ membership.group.name }}
+    </h3>
+    {% if membership.group.description %}
+    <p class="text-xs text-ink-dim line-clamp-2">{{ membership.group.description }}</p>
+    {% endif %}
+    {% if not membership.group.is_active %}
+    <span class="tag tag-inactive mt-3 inline-block">Archived</span>
+    {% endif %}
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="flex flex-col items-center justify-center py-24 text-center">
+  <div class="w-16 h-16 rounded-full bg-surface-raised border border-surface-border flex items-center justify-center mb-4">
+    <svg class="w-8 h-8 text-ink-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+  </div>
+  <h3 class="font-display text-lg text-ink font-bold mb-2">No groups yet</h3>
+  <p class="text-sm text-ink-dim mb-6">Create a group to start tracking shared expenses.</p>
+  <a href="{% url 'group_create' %}" class="btn-primary">Create your first group</a>
+</div>
+{% endif %}
+{% endblock %}

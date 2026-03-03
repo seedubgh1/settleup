@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Reports — {{ group.name }} — SettleUp{% endblock %}
+{% block page_title %}Reports{% endblock %}
+{% block nav_reports %}active{% endblock %}
+{% block content %}
+
+<!-- Filters -->
+<div class="card p-4 mb-6">
+  <form method="get" class="flex flex-wrap gap-3 items-end">
+    <div>
+      <label class="form-label">From</label>
+      <input type="date" name="date_from" class="form-input w-36" value="{{ date_from|default:'' }}" />
+    </div>
+    <div>
+      <label class="form-label">To</label>
+      <input type="date" name="date_to" class="form-input w-36" value="{{ date_to|default:'' }}" />
+    </div>
+    <div>
+      <label class="form-label">Category</label>
+      <select name="category" class="form-input w-36">
+        <option value="">All</option>
+        {% for cat in categories %}
+        <option value="{{ cat.pk }}" {% if selected_category == cat.pk|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn-secondary">Run report</button>
+    <a href="{% url 'report' group_id=group.pk %}" class="btn-secondary">Clear</a>
+  </form>
+</div>
+
+{% if by_category %}
+<div class="card">
+  <div class="px-6 py-4 border-b border-surface-border">
+    <h2 class="font-semibold text-ink text-sm">Spending by Category</h2>
+  </div>
+  {% with total=by_category|length %}
+  <div class="divide-y divide-surface-border">
+    {% for row in by_category %}
+    <div class="flex items-center gap-4 px-6 py-4">
+      <div class="flex-1">
+        <p class="text-sm font-medium text-ink">{{ row.expense__category__name }}</p>
+      </div>
+      <div class="text-right">
+        <p class="text-sm font-mono font-semibold text-ink">${{ row.total|floatformat:2 }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endwith %}
+</div>
+{% else %}
+<div class="card px-6 py-12 text-center">
+  <p class="text-sm text-ink-dim">No data for the selected filters.</p>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Accept Invitation — SettleUp{% endblock %}
+{% block auth_content %}
+<div class="card p-8 text-center">
+  <div class="w-12 h-12 rounded-full bg-accent-dim flex items-center justify-center mx-auto mb-4">
+    <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+  </div>
+  <h2 class="font-display text-xl text-ink font-bold mb-1">You've been invited</h2>
+  <p class="text-sm text-ink-dim mb-2">to join <strong class="text-ink">{{ invitation.group.name }}</strong></p>
+  <p class="text-xs text-ink-dim mb-6">Invited by {{ invitation.invited_by.user.get_full_name }}</p>
+  {% if invitation.status == 'pending' %}
+  <form method="post" class="space-y-3">
+    {% csrf_token %}
+    <button type="submit" class="btn-primary w-full">Accept invitation</button>
+    <a href="{% url 'login' %}" class="btn-secondary w-full block text-center">Sign in first</a>
+  </form>
+  {% else %}
+  <p class="text-sm text-red-400">This invitation is no longer valid ({{ invitation.status }}).</p>
+  {% endif %}
+</div>
+{% endblock %}

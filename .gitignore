@@ -10,4 +10,3 @@ wheels/
 .venv
 pat.tkn
 .env
-.env.sample

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Expenses — {{ group.name }} — SettleUp{% endblock %}
+{% block page_title %}Expenses{% endblock %}
+{% block nav_expenses %}active{% endblock %}
+{% block header_actions %}
+  <a href="{% url 'expense_add' group_id=group.pk %}" class="btn-primary text-sm">+ Add Expense</a>
+{% endblock %}
+{% block content %}
+
+<!-- Filters -->
+<div class="card p-4 mb-4">
+  <form method="get" class="flex flex-wrap gap-3 items-end">
+    <div>
+      <label class="form-label">From</label>
+      <input type="date" name="date_from" class="form-input w-36" value="{{ request.GET.date_from }}" />
+    </div>
+    <div>
+      <label class="form-label">To</label>
+      <input type="date" name="date_to" class="form-input w-36" value="{{ request.GET.date_to }}" />
+    </div>
+    <div>
+      <label class="form-label">Category</label>
+      <select name="category" class="form-input w-36">
+        <option value="">All</option>
+        {% for cat in categories %}
+        <option value="{{ cat.pk }}" {% if request.GET.category == cat.pk|stringformat:"s" %}selected{% endif %}>{{ cat.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="form-label">Member</label>
+      <select name="member" class="form-input w-36">
+        <option value="">All</option>
+        {% for m in members %}
+        <option value="{{ m.pk }}" {% if request.GET.member == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.user.first_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn-secondary">Filter</button>
+    <a href="{% url 'expense_list' group_id=group.pk %}" class="btn-secondary">Clear</a>
+    {% if group_member.role != 'member' %}
+    <a href="?show_deleted={% if show_deleted %}false{% else %}true{% endif %}"
+       class="ml-auto text-xs {% if show_deleted %}text-accent{% else %}text-ink-dim{% endif %} hover:text-ink transition-colors self-end pb-2">
+      {% if show_deleted %}Hide deleted{% else %}Show deleted{% endif %}
+    </a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- Expense table -->
+<div class="card">
+  {% if expenses %}
+  <div class="divide-y divide-surface-border">
+    {% for expense in expenses %}
+    <div class="flex items-center gap-4 px-6 py-3 {% if expense.is_deleted %}opacity-40{% endif %}">
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2">
+          <a href="{% url 'expense_detail' group_id=group.pk expense_id=expense.pk %}"
+             class="text-sm font-medium text-ink hover:text-accent transition-colors truncate">
+            {{ expense.description }}
+          </a>
+          {% if expense.is_deleted %}<span class="tag bg-red-950 text-red-400">deleted</span>{% endif %}
+        </div>
+        <p class="text-xs text-ink-dim">{{ expense.paid_by.user.get_full_name }} · {{ expense.date }} · {{ expense.category.name }}</p>
+      </div>
+      <p class="text-sm font-mono font-semibold text-ink">${{ expense.amount }}</p>
+      {% if not expense.is_deleted %}
+      <div class="flex items-center gap-2 ml-2">
+        <a href="{% url 'expense_edit' group_id=group.pk expense_id=expense.pk %}"
+           class="text-xs text-ink-dim hover:text-ink transition-colors">Edit</a>
+        {% if group_member.role != 'member' %}
+        <form method="post" action="{% url 'expense_delete' group_id=group.pk expense_id=expense.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="text-xs text-red-400 hover:text-red-300 transition-colors"
+                  onclick="return confirm('Delete this expense?')">Delete</button>
+        </form>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  <!-- Pagination -->
+  {% if is_paginated %}
+  <div class="flex items-center justify-between px-6 py-3 border-t border-surface-border">
+    <span class="text-xs text-ink-dim">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    <div class="flex gap-2">
+      {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}" class="btn-secondary text-xs py-1 px-3">Previous</a>
+      {% endif %}
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" class="btn-secondary text-xs py-1 px-3">Next</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% else %}
+  <div class="px-6 py-12 text-center">
+    <p class="text-sm text-ink-dim">No expenses found.</p>
+    <a href="{% url 'expense_add' group_id=group.pk %}" class="text-sm text-accent hover:underline mt-1 inline-block">Add one</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

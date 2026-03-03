@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}{{ group.name }} — SettleUp{% endblock %}
+{% block page_title %}{{ group.name }}{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+{% block header_actions %}
+  <a href="{% url 'expense_add' group_id=group.pk %}" class="btn-primary text-sm">+ Add Expense</a>
+  <a href="{% url 'payment_add' group_id=group.pk %}" class="btn-secondary text-sm">+ Add Payment</a>
+{% endblock %}
+{% block content %}
+
+<!-- Balance card -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  <div class="card p-5">
+    <p class="form-label mb-1">Your Balance</p>
+    <p class="text-2xl font-mono font-semibold
+      {% if my_balance > 0 %}balance-owe
+      {% elif my_balance < 0 %}balance-owed
+      {% else %}balance-zero{% endif %}">
+      {% if my_balance > 0 %}you owe ${{ my_balance }}
+      {% elif my_balance < 0 %}you're owed ${{ my_balance|slice:"1:" }}
+      {% else %}all settled{% endif %}
+    </p>
+  </div>
+  <div class="card p-5">
+    <p class="form-label mb-1">Your Share</p>
+    <p class="text-2xl font-mono font-semibold text-ink">{{ group_member.default_percentage }}%</p>
+  </div>
+  <div class="card p-5">
+    <p class="form-label mb-1">Your Role</p>
+    <p class="mt-1"><span class="tag tag-{{ group_member.role }}">{{ group_member.get_role_display }}</span></p>
+  </div>
+</div>
+
+<!-- Recent expenses -->
+<div class="card">
+  <div class="flex items-center justify-between px-6 py-4 border-b border-surface-border">
+    <h2 class="font-semibold text-ink text-sm">Recent Expenses</h2>
+    <a href="{% url 'expense_list' group_id=group.pk %}" class="text-xs text-accent hover:underline">View all</a>
+  </div>
+  {% if recent_expenses %}
+  <div class="divide-y divide-surface-border">
+    {% for expense in recent_expenses %}
+    <div class="flex items-center gap-4 px-6 py-3">
+      <div class="w-8 h-8 rounded-md bg-surface-border flex items-center justify-center flex-shrink-0 text-ink-dim">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-ink truncate">{{ expense.description }}</p>
+        <p class="text-xs text-ink-dim">{{ expense.paid_by.user.get_full_name }} · {{ expense.date }}</p>
+      </div>
+      <div class="text-right">
+        <p class="text-sm font-mono font-semibold text-ink">${{ expense.amount }}</p>
+        <p class="text-xs text-ink-dim">{{ expense.category.name }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="px-6 py-10 text-center">
+    <p class="text-sm text-ink-dim">No expenses yet.</p>
+    <a href="{% url 'expense_add' group_id=group.pk %}" class="text-sm text-accent hover:underline mt-1 inline-block">Add the first one</a>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

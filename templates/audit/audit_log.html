@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Audit Log — {{ group.name }} — SettleUp{% endblock %}
+{% block page_title %}Audit Log{% endblock %}
+{% block nav_audit %}active{% endblock %}
+{% block content %}
+<div class="card">
+  {% if audit_logs %}
+  <div class="divide-y divide-surface-border">
+    {% for log in audit_logs %}
+    <div class="flex items-start gap-4 px-6 py-3">
+      <div class="w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0
+        {% if log.event_type == 'role_changed' %}bg-purple-400
+        {% elif log.event_type == 'percentage_changed' %}bg-blue-400
+        {% elif log.event_type == 'member_deactivated' %}bg-red-400
+        {% elif log.event_type == 'ownership_transferred' %}bg-yellow-400
+        {% else %}bg-ink-dim{% endif %}">
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm text-ink">
+          <span class="font-medium">{{ log.acted_by.user.get_full_name }}</span>
+          —
+          {{ log.get_event_type_display }}
+          for <span class="font-medium">{{ log.group_member.user.get_full_name }}</span>
+        </p>
+        {% if log.old_value or log.new_value %}
+        <p class="text-xs text-ink-dim font-mono mt-0.5">
+          {{ log.old_value }} → {{ log.new_value }}
+        </p>
+        {% endif %}
+      </div>
+      <p class="text-xs text-ink-dim flex-shrink-0">{{ log.timestamp|date:"M j, Y g:i a" }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% if is_paginated %}
+  <div class="flex items-center justify-between px-6 py-3 border-t border-surface-border">
+    <span class="text-xs text-ink-dim">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    <div class="flex gap-2">
+      {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="btn-secondary text-xs py-1 px-3">Previous</a>{% endif %}
+      {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="btn-secondary text-xs py-1 px-3">Next</a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% else %}
+  <div class="px-6 py-12 text-center">
+    <p class="text-sm text-ink-dim">No activity recorded yet.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

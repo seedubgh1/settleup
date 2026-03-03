@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Sign In — SettleUp{% endblock %}
+{% block auth_content %}
+<div class="card p-8">
+  <h2 class="font-display text-2xl text-ink font-bold mb-6">Welcome back</h2>
+  <form method="post" class="space-y-5">
+    {% csrf_token %}
+    <div>
+      <label class="form-label">Email</label>
+      <input type="text" name="username" autofocus autocomplete="email"
+             class="form-input" placeholder="you@example.com" />
+    </div>
+    <div>
+      <div class="flex items-center justify-between mb-1.5">
+        <label class="form-label mb-0">Password</label>
+        <a href="{% url 'password_reset' %}" class="text-xs text-accent hover:text-accent-muted transition-colors">Forgot password?</a>
+      </div>
+      <input type="password" name="password" autocomplete="current-password"
+             class="form-input" placeholder="••••••••" />
+    </div>
+    {% if form.errors %}
+    <p class="text-sm text-red-400">Invalid email or password. Please try again.</p>
+    {% endif %}
+    <button type="submit" class="btn-primary w-full text-center block mt-2">Sign in</button>
+  </form>
+  <p class="text-center text-sm text-ink-dim mt-6">
+    No account? <a href="{% url 'register' %}" class="text-accent hover:underline">Create one</a>
+  </p>
+</div>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}{% if expense %}Edit Expense{% else %}Add Expense{% endif %} — SettleUp{% endblock %}
+{% block page_title %}{% if expense %}Edit Expense{% else %}Add Expense{% endif %}{% endblock %}
+{% block nav_expenses %}active{% endblock %}
+{% block content %}
+<div class="max-w-xl">
+  <form method="post" id="expenseForm">
+    {% csrf_token %}
+    {{ formset.management_form }}
+
+    <div class="card p-6 space-y-5 mb-4">
+      <h2 class="font-semibold text-ink text-sm border-b border-surface-border pb-3">Expense Details</h2>
+      <div>
+        <label class="form-label">Description</label>
+        <input type="text" name="description" class="form-input"
+               placeholder="e.g. Groceries, Electricity bill"
+               value="{{ form.description.value|default:'' }}" />
+        {% if form.description.errors %}<p class="text-xs text-red-400 mt-1">{{ form.description.errors|join:", " }}</p>{% endif %}
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="form-label">Amount</label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-ink-dim">$</span>
+            <input type="number" name="amount" step="0.01" min="0.01"
+                   class="form-input pl-7"
+                   value="{{ form.amount.value|default:'' }}" />
+          </div>
+          {% if form.amount.errors %}<p class="text-xs text-red-400 mt-1">{{ form.amount.errors|join:", " }}</p>{% endif %}
+        </div>
+        <div>
+          <label class="form-label">Date</label>
+          <input type="date" name="date" class="form-input"
+                 value="{{ form.date.value|default:'' }}" />
+        </div>
+      </div>
+      <div>
+        <label class="form-label">Category</label>
+        <select name="category" class="form-input">
+          <option value="">— Select category —</option>
+          {% for cat in form.fields.category.queryset %}
+          <option value="{{ cat.pk }}" {% if form.category.value == cat.pk|stringformat:"s" %}selected{% endif %}>
+            {{ cat.name }}
+          </option>
+          {% endfor %}
+        </select>
+        {% if form.category.errors %}<p class="text-xs text-red-400 mt-1">{{ form.category.errors|join:", " }}</p>{% endif %}
+      </div>
+      <div>
+        <label class="form-label">Notes <span class="normal-case font-normal text-ink-dim">(optional)</span></label>
+        <textarea name="notes" class="form-input">{{ form.notes.value|default:'' }}</textarea>
+      </div>
+    </div>
+
+    <!-- Splits -->
+    <div class="card p-6 space-y-4 mb-4">
+      <div class="flex items-center justify-between border-b border-surface-border pb-3">
+        <h2 class="font-semibold text-ink text-sm">Split</h2>
+        <span class="text-xs text-ink-dim">Total: <span id="splitTotal" class="font-mono font-semibold text-ink">0%</span></span>
+      </div>
+
+      <div id="splitRows" class="space-y-3">
+        {% for f in formset %}
+        <div class="split-row flex items-center gap-3">
+          {{ f.id }}
+          <div class="flex-1">
+            <select name="{{ f.group_member.html_name }}" class="form-input text-sm">
+              <option value="">— Member —</option>
+              {% for member in f.fields.group_member.queryset %}
+              <option value="{{ member.pk }}"
+                {% if f.group_member.value == member.pk|stringformat:"s" %}selected{% endif %}>
+                {{ member.user.get_full_name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="w-28 relative">
+            <input type="number" name="{{ f.percentage.html_name }}"
+                   step="0.01" min="0.01" max="100"
+                   class="form-input pr-7 text-sm split-pct"
+                   value="{{ f.percentage.value|default:'' }}" />
+            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-ink-dim text-xs">%</span>
+          </div>
+          <label class="flex items-center gap-1 text-xs text-ink-dim cursor-pointer">
+            <input type="checkbox" name="{{ f.DELETE.html_name }}"
+                   class="rounded border-surface-border delete-check"
+                   {% if f.DELETE.value %}checked{% endif %} />
+            Remove
+          </label>
+        </div>
+        {% endfor %}
+      </div>
+
+      <button type="button" id="addSplitRow" class="text-xs text-accent hover:underline">+ Add member</button>
+    </div>
+
+    <div class="flex gap-3">
+      <button type="submit" class="btn-primary">{% if expense %}Save changes{% else %}Add expense{% endif %}</button>
+      <a href="{% url 'expense_list' group_id=group.pk %}" class="btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+  // Live split total
+  function updateSplitTotal() {
+    const inputs = document.querySelectorAll('.split-pct');
+    let total = 0;
+    inputs.forEach(inp => {
+      const row = inp.closest('.split-row');
+      const delCheck = row ? row.querySelector('.delete-check') : null;
+      if (!delCheck || !delCheck.checked) {
+        total += parseFloat(inp.value) || 0;
+      }
+    });
+    const el = document.getElementById('splitTotal');
+    el.textContent = total.toFixed(2) + '%';
+    el.className = 'font-mono font-semibold ' + (Math.abs(total - 100) < 0.01 ? 'text-accent' : 'text-red-400');
+  }
+  document.addEventListener('input', updateSplitTotal);
+  document.addEventListener('change', updateSplitTotal);
+  updateSplitTotal();
+</script>
+{% endblock %}

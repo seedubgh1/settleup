@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Payments — {{ group.name }} — SettleUp{% endblock %}
+{% block page_title %}Payments{% endblock %}
+{% block nav_payments %}active{% endblock %}
+{% block header_actions %}
+  <a href="{% url 'payment_add' group_id=group.pk %}" class="btn-primary text-sm">+ Add Payment</a>
+{% endblock %}
+{% block content %}
+
+<!-- Filters -->
+<div class="card p-4 mb-4">
+  <form method="get" class="flex flex-wrap gap-3 items-end">
+    <div>
+      <label class="form-label">From</label>
+      <input type="date" name="date_from" class="form-input w-36" value="{{ request.GET.date_from }}" />
+    </div>
+    <div>
+      <label class="form-label">To</label>
+      <input type="date" name="date_to" class="form-input w-36" value="{{ request.GET.date_to }}" />
+    </div>
+    <div>
+      <label class="form-label">Member</label>
+      <select name="member" class="form-input w-36">
+        <option value="">All</option>
+        {% for m in group.memberships.all %}
+        <option value="{{ m.pk }}" {% if request.GET.member == m.pk|stringformat:"s" %}selected{% endif %}>{{ m.user.first_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn-secondary">Filter</button>
+    <a href="{% url 'payment_list' group_id=group.pk %}" class="btn-secondary">Clear</a>
+  </form>
+</div>
+
+<div class="card">
+  {% if payments %}
+  <div class="divide-y divide-surface-border">
+    {% for payment in payments %}
+    <div class="flex items-center gap-4 px-6 py-3">
+      <div class="w-8 h-8 rounded-full bg-accent-dim flex items-center justify-center text-accent text-xs font-bold flex-shrink-0">
+        {{ payment.paid_by.user.first_name|first|upper }}
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-ink">{{ payment.paid_by.user.get_full_name }}</p>
+        <p class="text-xs text-ink-dim">{{ payment.date }}{% if payment.notes %} · {{ payment.notes }}{% endif %}</p>
+      </div>
+      <p class="text-sm font-mono font-semibold balance-owed">${{ payment.amount }}</p>
+      {% if group_member.role != 'member' %}
+      <form method="post" action="{% url 'payment_delete' group_id=group.pk payment_id=payment.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="text-xs text-red-400 hover:text-red-300 ml-2"
+                onclick="return confirm('Delete this payment?')">Delete</button>
+      </form>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% if is_paginated %}
+  <div class="flex items-center justify-between px-6 py-3 border-t border-surface-border">
+    <span class="text-xs text-ink-dim">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    <div class="flex gap-2">
+      {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="btn-secondary text-xs py-1 px-3">Previous</a>{% endif %}
+      {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="btn-secondary text-xs py-1 px-3">Next</a>{% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% else %}
+  <div class="px-6 py-12 text-center">
+    <p class="text-sm text-ink-dim">No payments recorded yet.</p>
+    <a href="{% url 'payment_add' group_id=group.pk %}" class="text-sm text-accent hover:underline mt-1 inline-block">Add one</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

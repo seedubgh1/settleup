@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Invite Member — SettleUp{% endblock %}
+{% block page_title %}Invite Member{% endblock %}
+{% block nav_members %}active{% endblock %}
+{% block content %}
+<div class="max-w-md">
+  <div class="card p-6">
+    <p class="text-sm text-ink-dim mb-6">An invitation will be recorded. Once the task runner is enabled, an email will be sent automatically.</p>
+    <form method="post" class="space-y-5">
+      {% csrf_token %}
+      <div>
+        <label class="form-label">Email address</label>
+        <input type="email" name="email" class="form-input"
+               placeholder="newmember@example.com"
+               value="{{ form.email.value|default:'' }}" />
+        {% if form.email.errors %}<p class="text-xs text-red-400 mt-1">{{ form.email.errors|join:", " }}</p>{% endif %}
+      </div>
+      <div>
+        <label class="form-label">Default Percentage</label>
+        <div class="relative">
+          <input type="number" name="default_percentage" step="0.01" min="0.01" max="100"
+                 class="form-input pr-8"
+                 value="{{ form.default_percentage.value|default:'' }}" />
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-ink-dim text-sm">%</span>
+        </div>
+        {% if form.default_percentage.errors %}<p class="text-xs text-red-400 mt-1">{{ form.default_percentage.errors|join:", " }}</p>{% endif %}
+        <p class="text-xs text-ink-dim mt-1">You will need to rebalance existing members after the invitation is accepted.</p>
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="btn-primary">Send invitation</button>
+        <a href="{% url 'member_list' group_id=group.pk %}" class="btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

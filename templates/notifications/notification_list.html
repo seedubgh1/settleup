@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Notifications — {{ group.name }} — SettleUp{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block header_actions %}
+  <form method="post" action="{% url 'notification_send' group_id=group.pk %}">
+    {% csrf_token %}
+    <button type="submit" class="btn-primary text-sm">Notify Members</button>
+  </form>
+{% endblock %}
+{% block content %}
+<div class="card">
+  {% if notifications %}
+  <div class="divide-y divide-surface-border">
+    {% for n in notifications %}
+    <div class="flex items-start gap-4 px-6 py-4">
+      <div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0
+        {% if n.status == 'sent' %}bg-accent
+        {% elif n.status == 'failed' %}bg-red-500
+        {% else %}bg-yellow-500{% endif %}">
+      </div>
+      <div class="flex-1">
+        <p class="text-sm text-ink">{{ n.message }}</p>
+        <p class="text-xs text-ink-dim mt-1">
+          {{ n.created_at|date:"M j, Y g:i a" }} ·
+          <span class="tag
+            {% if n.status == 'sent' %}tag-active
+            {% elif n.status == 'failed' %}bg-red-950 text-red-400
+            {% else %}bg-yellow-950 text-yellow-400{% endif %}">
+            {{ n.status }}
+          </span>
+          {% if n.triggered_by %}· by {{ n.triggered_by.user.get_full_name }}{% endif %}
+        </p>
+      </div>
+      <p class="text-sm font-mono text-ink-muted">${{ n.balance_snapshot|floatformat:2 }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="px-6 py-12 text-center">
+    <p class="text-sm text-ink-dim">No notifications sent yet.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

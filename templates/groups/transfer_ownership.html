@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Transfer Ownership — SettleUp{% endblock %}
+{% block page_title %}Transfer Ownership{% endblock %}
+{% block content %}
+<div class="max-w-md">
+  <div class="card p-6">
+    <p class="text-sm text-red-400 bg-red-950 border border-red-800 rounded-lg px-4 py-3 mb-6">
+      Warning: Once you transfer ownership you will become an admin and lose owner privileges.
+    </p>
+    <form method="post" class="space-y-5">
+      {% csrf_token %}
+      <div>
+        <label class="form-label">Transfer ownership to</label>
+        <select name="new_owner" class="form-input">
+          <option value="">— Select a member —</option>
+          {% for member in form.fields.new_owner.queryset %}
+          <option value="{{ member.pk }}" {% if form.new_owner.value == member.pk|stringformat:"s" %}selected{% endif %}>
+            {{ member.user.get_full_name }} ({{ member.get_role_display }})
+          </option>
+          {% endfor %}
+        </select>
+        {% if form.new_owner.errors %}<p class="text-xs text-red-400 mt-1">{{ form.new_owner.errors|join:", " }}</p>{% endif %}
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="btn-danger" onclick="return confirm('Are you sure? This cannot be undone.')">Transfer ownership</button>
+        <a href="{% url 'member_list' group_id=group.pk %}" class="btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

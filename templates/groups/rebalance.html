@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Rebalance Percentages — SettleUp{% endblock %}
+{% block page_title %}Rebalance Percentages{% endblock %}
+{% block nav_members %}active{% endblock %}
+{% block content %}
+<div class="max-w-md">
+  <div class="card p-6">
+    <p class="text-sm text-ink-dim mb-6">Adjust the default contribution percentages for all active members. The total must equal 100%.</p>
+    <form method="post" class="space-y-4" id="rebalanceForm">
+      {% csrf_token %}
+      {% for field in form %}
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="form-label mb-0">{{ field.label }}</label>
+          <span class="text-xs text-ink-dim font-mono" id="val_{{ field.html_name }}">{{ field.value }}%</span>
+        </div>
+        <div class="relative">
+          <input type="number" name="{{ field.html_name }}" step="0.01" min="0" max="100"
+                 class="form-input pr-8 pct-input"
+                 value="{{ field.value }}" />
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-ink-dim text-sm">%</span>
+        </div>
+      </div>
+      {% endfor %}
+      {% if form.non_field_errors %}
+      <p class="text-xs text-red-400">{{ form.non_field_errors|join:", " }}</p>
+      {% endif %}
+      <div class="flex items-center justify-between pt-2 border-t border-surface-border">
+        <span class="text-xs text-ink-dim">Total: <span id="totalDisplay" class="font-mono font-semibold text-ink">0%</span></span>
+        <div class="flex gap-3">
+          <button type="submit" class="btn-primary">Save</button>
+          <a href="{% url 'member_list' group_id=group.pk %}" class="btn-secondary">Cancel</a>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+  const inputs = document.querySelectorAll('.pct-input');
+  const totalEl = document.getElementById('totalDisplay');
+  function updateTotal() {
+    let total = 0;
+    inputs.forEach(inp => { total += parseFloat(inp.value) || 0; });
+    totalEl.textContent = total.toFixed(2) + '%';
+    totalEl.className = 'font-mono font-semibold ' + (Math.abs(total - 100) < 0.01 ? 'text-accent' : 'text-red-400');
+  }
+  inputs.forEach(inp => inp.addEventListener('input', updateTotal));
+  updateTotal();
+</script>
+{% endblock %}
