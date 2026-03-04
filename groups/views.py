@@ -248,7 +248,7 @@ class RebalancePercentagesView(AdminRequiredMixin, View):
         })
 
 
-class TransferOwnershipView(OwnerRequiredMixin, View):
+class TransferOwnershipView(AdminRequiredMixin, View):
     template_name = "groups/transfer_ownership.html"
 
     def get(self, request, group_id):
@@ -274,11 +274,16 @@ class TransferOwnershipView(OwnerRequiredMixin, View):
                 self.group_member,
                 form.cleaned_data["new_owner"],
             )
-            messages.success(request, "Ownership transferred.")
-            return redirect("group_detail", group_id=self.group.pk)
+            messages.success(request, "Ownership transferred successfully.")
+            # Redirect directly — do not go through the mixin's dispatch again
+            from django.http import HttpResponseRedirect
+            from django.urls import reverse
+            return HttpResponseRedirect(
+                reverse("group_detail", kwargs={"group_id": self.group.pk})
+            )
         return render(request, self.template_name, {
             "form": form, "group": self.group,
-        })
+    })
 
 
 class InvitationAcceptView(View):

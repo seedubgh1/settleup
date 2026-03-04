@@ -10,6 +10,7 @@ urlpatterns = [
     path("", include("users.urls")),
     path("groups/", include("groups.urls")),
     path("alerts/", include("alerts.urls")),
+    path("categories/", include("expenses.category_urls")),
 ]
 
 if settings.DEBUG:

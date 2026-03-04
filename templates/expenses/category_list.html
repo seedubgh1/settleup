@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Categories — SettleUp{% endblock %}
+{% block page_title %}Categories{% endblock %}
+{% block header_actions %}
+  <a href="{% url 'category_add' %}" class="btn-primary text-sm">+ Add Category</a>
+{% endblock %}
+{% block content %}
+<div class="max-w-lg">
+  <div class="card">
+    {% if categories %}
+    <div class="divide-y divide-surface-border">
+      {% for category in categories %}
+      <div class="flex items-center justify-between px-6 py-3">
+        <span class="text-sm text-ink">{{ category.name }}</span>
+        <a href="{% url 'category_edit' category_id=category.pk %}"
+           class="text-xs text-ink-dim hover:text-ink transition-colors">Edit</a>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="px-6 py-12 text-center">
+      <p class="text-sm text-ink-dim">No categories yet.</p>
+      <a href="{% url 'category_add' %}" class="text-sm text-accent hover:underline mt-1 inline-block">Add one</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -79,6 +79,10 @@ class BaseExpenseSplitFormSet(BaseFormSet):
                 })
         return splits
 
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ("name",)
 
 ExpenseSplitFormSet = formset_factory(
     ExpenseSplitForm,

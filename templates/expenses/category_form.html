@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{% if category %}Edit Category{% else %}Add Category{% endif %} — SettleUp{% endblock %}
+{% block page_title %}{% if category %}Edit Category{% else %}Add Category{% endif %}{% endblock %}
+{% block content %}
+<div class="max-w-sm">
+  <div class="card p-6">
+    <form method="post" class="space-y-5">
+      {% csrf_token %}
+      <div>
+        <label class="form-label">Category name</label>
+        <input type="text" name="name" class="form-input"
+               placeholder="e.g. Pet Care, Garden"
+               value="{{ form.name.value|default:'' }}" />
+        {% if form.name.errors %}
+        <p class="text-xs text-red-400 mt-1">{{ form.name.errors|join:", " }}</p>
+        {% endif %}
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="btn-primary">
+          {% if category %}Save changes{% else %}Add category{% endif %}
+        </button>
+        <a href="{% url 'category_list' %}" class="btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
