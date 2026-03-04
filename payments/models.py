@@ -30,8 +30,8 @@ class Payment(models.Model):
     def __str__(self):
         return f"{self.paid_by} paid {self.amount} into {self.group}"
 
-    def clean(self):
-        if self.paid_by.group != self.group:
-            raise ValidationError(
-                "The paying member must belong to this group."
-            )
+    # def clean(self):
+    #     if self.paid_by.group != self.group:
+    #         raise ValidationError(
+    #             "The paying member must belong to this group."
+    #         )

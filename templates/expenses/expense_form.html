@@ -32,6 +32,7 @@
           <label class="form-label">Date</label>
           <input type="date" name="date" class="form-input"
                  value="{{ form.date.value|default:'' }}" />
+          {% if form.date.errors %}<p class="text-xs text-red-400 mt-1">{{ form.date.errors|join:", " }}</p>{% endif %}
         </div>
       </div>
       <div>
@@ -39,7 +40,8 @@
         <select name="category" class="form-input">
           <option value="">— Select category —</option>
           {% for cat in form.fields.category.queryset %}
-          <option value="{{ cat.pk }}" {% if form.category.value == cat.pk|stringformat:"s" %}selected{% endif %}>
+          <option value="{{ cat.pk }}"
+            {% if form.category.value == cat.pk|stringformat:"s" %}selected{% endif %}>
             {{ cat.name }}
           </option>
           {% endfor %}
@@ -56,66 +58,68 @@
     <div class="card p-6 space-y-4 mb-4">
       <div class="flex items-center justify-between border-b border-surface-border pb-3">
         <h2 class="font-semibold text-ink text-sm">Split</h2>
-        <span class="text-xs text-ink-dim">Total: <span id="splitTotal" class="font-mono font-semibold text-ink">0%</span></span>
+        <span class="text-xs text-ink-dim">
+          Total: <span id="splitTotal" class="font-mono font-semibold text-red-400">0%</span>
+        </span>
       </div>
 
-      <div id="splitRows" class="space-y-3">
+      <div class="space-y-3">
         {% for f in formset %}
         <div class="split-row flex items-center gap-3">
-          {{ f.id }}
-          <div class="flex-1">
-            <select name="{{ f.group_member.html_name }}" class="form-input text-sm">
-              <option value="">— Member —</option>
-              {% for member in f.fields.group_member.queryset %}
-              <option value="{{ member.pk }}"
-                {% if f.group_member.value == member.pk|stringformat:"s" %}selected{% endif %}>
-                {{ member.user.get_full_name }}
-              </option>
-              {% endfor %}
-            </select>
-          </div>
+          <input type="hidden" name="{{ f.group_member_id.html_name }}"
+                 value="{{ f.group_member_id.value }}" />
+          <span class="flex-1 text-sm text-ink">{{ f.member_name.value }}</span>
           <div class="w-28 relative">
-            <input type="number" name="{{ f.percentage.html_name }}"
-                   step="0.01" min="0.01" max="100"
+            <input type="number"
+                   name="{{ f.percentage.html_name }}"
+                   step="0.01" min="0" max="100"
                    class="form-input pr-7 text-sm split-pct"
                    value="{{ f.percentage.value|default:'' }}" />
             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-ink-dim text-xs">%</span>
           </div>
-          <label class="flex items-center gap-1 text-xs text-ink-dim cursor-pointer">
-            <input type="checkbox" name="{{ f.DELETE.html_name }}"
+          <label class="flex items-center gap-1.5 text-xs text-ink-dim cursor-pointer whitespace-nowrap">
+            <input type="checkbox"
+                   name="{{ f.include.html_name }}"
                    class="rounded border-surface-border delete-check"
-                   {% if f.DELETE.value %}checked{% endif %} />
-            Remove
+                   {% if f.include.value %}checked{% endif %} />
+            Include
           </label>
         </div>
+        {% if f.errors %}
+        <p class="text-xs text-red-400 pl-2">{{ f.errors }}</p>
+        {% endif %}
         {% endfor %}
       </div>
 
-      <button type="button" id="addSplitRow" class="text-xs text-accent hover:underline">+ Add member</button>
+      {% if formset.non_form_errors %}
+      <p class="text-xs text-red-400 mt-2">{{ formset.non_form_errors|join:", " }}</p>
+      {% endif %}
     </div>
 
     <div class="flex gap-3">
-      <button type="submit" class="btn-primary">{% if expense %}Save changes{% else %}Add expense{% endif %}</button>
+      <button type="submit" class="btn-primary">
+        {% if expense %}Save changes{% else %}Add expense{% endif %}
+      </button>
       <a href="{% url 'expense_list' group_id=group.pk %}" class="btn-secondary">Cancel</a>
     </div>
   </form>
 </div>
 
 <script>
-  // Live split total
   function updateSplitTotal() {
-    const inputs = document.querySelectorAll('.split-pct');
+    const rows = document.querySelectorAll('.split-row');
     let total = 0;
-    inputs.forEach(inp => {
-      const row = inp.closest('.split-row');
-      const delCheck = row ? row.querySelector('.delete-check') : null;
-      if (!delCheck || !delCheck.checked) {
-        total += parseFloat(inp.value) || 0;
+    rows.forEach(row => {
+      const check = row.querySelector('.delete-check');
+      const pct = row.querySelector('.split-pct');
+      if (check && check.checked && pct) {
+        total += parseFloat(pct.value) || 0;
       }
     });
     const el = document.getElementById('splitTotal');
     el.textContent = total.toFixed(2) + '%';
-    el.className = 'font-mono font-semibold ' + (Math.abs(total - 100) < 0.01 ? 'text-accent' : 'text-red-400');
+    el.className = 'font-mono font-semibold ' +
+      (Math.abs(total - 100) < 0.01 ? 'text-accent' : 'text-red-400');
   }
   document.addEventListener('input', updateSplitTotal);
   document.addEventListener('change', updateSplitTotal);

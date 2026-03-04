@@ -42,6 +42,12 @@ class PaymentCreateView(ActiveMemberRequiredMixin, View):
             payment = form.save(commit=False)
             payment.group = self.group
             payment.paid_by = self.group_member
+
+            # Validate here instead of on the model
+            if payment.paid_by.group != payment.group:
+                messages.error(request, "The paying member must belong to this group.")
+                return render(request, self.template_name, {"form": form, "group": self.group})
+            
             payment.save()
             messages.success(request, "Payment recorded.")
             return redirect("payment_list", group_id=self.group.pk)

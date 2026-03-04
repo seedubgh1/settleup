@@ -3,6 +3,8 @@ from django.db import models as db_models, transaction
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
+from groups.models import GroupMember
+
 
 def calculate_balance(group_member) -> Decimal:
     """
@@ -33,7 +35,7 @@ def calculate_balance(group_member) -> Decimal:
 
 
 def calculate_group_balances(group) -> list:
-    from groups.models import GroupMember
+    # from groups.models import GroupMember # moved to top of this file
     memberships = (
         GroupMember.objects
         .filter(group=group)
@@ -54,6 +56,12 @@ def calculate_group_balances(group) -> list:
 @transaction.atomic
 def create_expense(group, paid_by, created_by, form_data: dict, splits: list) -> "Expense":
     from expenses.models import Expense, ExpenseSplit
+
+    # Validate paid_by here instead of on the model
+    if paid_by.group != group:
+        raise ValidationError("The member who paid must belong to this group.")
+    if paid_by.status == GroupMember.Status.INACTIVE:
+        raise ValidationError("An inactive member cannot be recorded as having paid.")
 
     total_pct = sum(s["percentage"] for s in splits)
     if round(total_pct, 2) != Decimal("100.00"):

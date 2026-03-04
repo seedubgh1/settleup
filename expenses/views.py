@@ -23,7 +23,6 @@ class ExpenseListView(ActiveMemberRequiredMixin, ListView):
         qs = Expense.objects.filter(group=self.group)
         if not show_deleted:
             qs = qs.filter(is_deleted=False)
-        # Filters
         category = self.request.GET.get("category")
         member = self.request.GET.get("member")
         date_from = self.request.GET.get("date_from")
@@ -67,62 +66,87 @@ class ExpenseDetailView(ActiveMemberRequiredMixin, DetailView):
         )
 
 
+def _build_split_initial(group):
+    """
+    Builds initial formset data from active members' default percentages.
+    """
+    members = GroupMember.objects.filter(
+        group=group,
+        status=GroupMember.Status.ACTIVE,
+    ).select_related("user").order_by("user__first_name")
+
+    return [
+        {
+            "group_member_id": m.pk,
+            "member_name": m.user.get_full_name(),
+            "percentage": m.default_percentage,
+            "include": True,
+        }
+        for m in members
+    ]
+
+
+def _build_split_initial_from_expense(expense):
+    """
+    Builds initial formset data from an existing expense's splits,
+    including active members not currently in the split.
+    """
+    existing = {
+        s.group_member_id: s.percentage
+        for s in expense.splits.select_related("group_member__user")
+    }
+    active_members = GroupMember.objects.filter(
+        group=expense.group,
+        status=GroupMember.Status.ACTIVE,
+    ).select_related("user").order_by("user__first_name")
+
+    return [
+        {
+            "group_member_id": m.pk,
+            "member_name": m.user.get_full_name(),
+            "percentage": existing.get(m.pk, m.default_percentage),
+            "include": m.pk in existing,
+        }
+        for m in active_members
+    ]
+
+
 class ExpenseCreateView(ActiveMemberRequiredMixin, View):
     template_name = "expenses/expense_form.html"
 
-    def _initial_splits(self):
-        """Build initial split data from active members' default percentages."""
-        members = GroupMember.objects.filter(
-            group=self.group,
-            status=GroupMember.Status.ACTIVE,
-        ).select_related("user")
-        return [
-            {"group_member": m, "percentage": m.default_percentage}
-            for m in members
-        ]
-
     def get(self, request, group_id):
         form = ExpenseForm()
-        formset = ExpenseSplitFormSet(
-            queryset=ExpenseSplitFormSet.model.objects.none(),
-        )
+        initial = _build_split_initial(self.group)
+        formset = ExpenseSplitFormSet(initial=initial)
         return render(request, self.template_name, {
             "form": form,
             "formset": formset,
             "group": self.group,
-            "initial_splits": self._initial_splits(),
         })
 
     def post(self, request, group_id):
         form = ExpenseForm(request.POST)
-        formset = ExpenseSplitFormSet(request.POST)
+        initial = _build_split_initial(self.group)
+        formset = ExpenseSplitFormSet(request.POST, initial=initial)
+
         if form.is_valid() and formset.is_valid():
-            splits = [
-                {
-                    "group_member": f.cleaned_data["group_member"],
-                    "percentage": f.cleaned_data["percentage"],
-                }
-                for f in formset.forms
-                if f.cleaned_data and not f.cleaned_data.get("DELETE")
-            ]
-            from django.core.exceptions import ValidationError
             try:
                 create_expense(
                     group=self.group,
                     paid_by=self.group_member,
                     created_by=self.group_member,
                     form_data=form.cleaned_data,
-                    splits=splits,
+                    splits=formset.get_splits(),
                 )
                 messages.success(request, "Expense added.")
                 return redirect("expense_list", group_id=self.group.pk)
-            except ValidationError as e:
-                messages.error(request, e.message)
+            except Exception as e:
+                messages.error(request, str(e))
+
         return render(request, self.template_name, {
             "form": form,
             "formset": formset,
             "group": self.group,
-            "initial_splits": self._initial_splits(),
         })
 
 
@@ -133,7 +157,6 @@ class ExpenseEditView(ActiveMemberRequiredMixin, View):
         expense = get_object_or_404(
             Expense, pk=self.kwargs["expense_id"], group=self.group
         )
-        # Only creator, admin, or owner can edit
         is_creator = expense.created_by == self.group_member
         is_admin = self.group_member.role in [
             GroupMember.Role.ADMIN, GroupMember.Role.OWNER
@@ -146,35 +169,38 @@ class ExpenseEditView(ActiveMemberRequiredMixin, View):
     def get(self, request, group_id, expense_id):
         expense = self.get_expense()
         form = ExpenseForm(instance=expense)
-        formset = ExpenseSplitFormSet(instance=expense)
+        initial = _build_split_initial_from_expense(expense)
+        formset = ExpenseSplitFormSet(initial=initial)
         return render(request, self.template_name, {
-            "form": form, "formset": formset,
-            "group": self.group, "expense": expense,
+            "form": form,
+            "formset": formset,
+            "group": self.group,
+            "expense": expense,
         })
 
     def post(self, request, group_id, expense_id):
         expense = self.get_expense()
         form = ExpenseForm(request.POST, instance=expense)
-        formset = ExpenseSplitFormSet(request.POST, instance=expense)
+        initial = _build_split_initial_from_expense(expense)
+        formset = ExpenseSplitFormSet(request.POST, initial=initial)
+
         if form.is_valid() and formset.is_valid():
-            splits = [
-                {
-                    "group_member": f.cleaned_data["group_member"],
-                    "percentage": f.cleaned_data["percentage"],
-                }
-                for f in formset.forms
-                if f.cleaned_data and not f.cleaned_data.get("DELETE")
-            ]
-            from django.core.exceptions import ValidationError
             try:
-                edit_expense(expense, form.cleaned_data, splits)
+                edit_expense(
+                    expense=expense,
+                    form_data=form.cleaned_data,
+                    splits=formset.get_splits(),
+                )
                 messages.success(request, "Expense updated.")
                 return redirect("expense_list", group_id=self.group.pk)
-            except ValidationError as e:
-                messages.error(request, e.message)
+            except Exception as e:
+                messages.error(request, str(e))
+
         return render(request, self.template_name, {
-            "form": form, "formset": formset,
-            "group": self.group, "expense": expense,
+            "form": form,
+            "formset": formset,
+            "group": self.group,
+            "expense": expense,
         })
 
 

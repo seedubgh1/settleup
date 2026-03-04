@@ -61,16 +61,16 @@ class Expense(models.Model):
     def __str__(self):
         return f"{self.description} — {self.amount} ({self.group})"
 
-    def clean(self):
-        if self.paid_by.group != self.group:
-            raise ValidationError(
-                "The member who paid must belong to this group."
-            )
-        from groups.models import GroupMember
-        if self.paid_by.status == GroupMember.Status.INACTIVE:
-            raise ValidationError(
-                "An inactive member cannot be recorded as having paid."
-            )
+    # def clean(self):
+    #     if self.paid_by.group != self.group:
+    #         raise ValidationError(
+    #             "The member who paid must belong to this group."
+    #         )
+    #     from groups.models import GroupMember
+    #     if self.paid_by.status == GroupMember.Status.INACTIVE:
+    #         raise ValidationError(
+    #             "An inactive member cannot be recorded as having paid."
+    #         )
 
 
 class ExpenseSplit(models.Model):
