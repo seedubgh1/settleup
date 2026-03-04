@@ -26,19 +26,36 @@ def create_group(name: str, description: str, created_by) -> Group:
 
 
 @transaction.atomic
-def rebalance_percentages(group: Group, percentages: dict) -> None:
+def rebalance_percentages(group: Group, percentages: dict, acted_by=None) -> None:
     """
     Updates default percentages for active members.
     percentages: {group_member_pk: Decimal}
     Validates sum equals 100 before writing.
     """
+    from audit.services import log_percentage_change
+    from alerts.services import alert_percentage_change
+
     total = sum(percentages.values())
     if round(total, 2) != Decimal("100.00"):
         raise ValidationError(
             f"Percentages must sum to 100. Got {total}."
         )
-    for pk, pct in percentages.items():
-        GroupMember.objects.filter(pk=pk).update(default_percentage=pct)
+
+    for pk, new_pct in percentages.items():
+        member = GroupMember.objects.get(pk=pk)
+        old_pct = member.default_percentage
+
+        member.default_percentage = new_pct
+        member.save()
+
+        if old_pct != new_pct and acted_by:
+            log_percentage_change(member, acted_by, old_pct, new_pct)
+            alert_percentage_change(
+                recipient=member,
+                old_percentage=old_pct,
+                new_percentage=new_pct,
+                reason="Contribution percentages were manually rebalanced",
+            )
 
 
 @transaction.atomic

@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from groups.models import GroupMember
+from expenses.models import Expense, ExpenseSplit
 
 
 def calculate_balance(group_member) -> Decimal:
@@ -11,7 +12,7 @@ def calculate_balance(group_member) -> Decimal:
     Positive = member owes the pool.
     Negative = pool owes the member.
     """
-    from expenses.models import ExpenseSplit
+    # from expenses.models import ExpenseSplit
     from payments.models import Payment
 
     total_owed = (
@@ -55,7 +56,7 @@ def calculate_group_balances(group) -> list:
 
 @transaction.atomic
 def create_expense(group, paid_by, created_by, form_data: dict, splits: list) -> "Expense":
-    from expenses.models import Expense, ExpenseSplit
+    # from expenses.models import Expense, ExpenseSplit
 
     # Validate paid_by here instead of on the model
     if paid_by.group != group:

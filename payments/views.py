@@ -3,10 +3,10 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import ListView, View
 from payments.models import Payment
 from payments.forms import PaymentForm
-from groups.mixins import ActiveMemberRequiredMixin, AdminRequiredMixin
+from groups.mixins import ActiveMemberRequiredMixin, AdminRequiredMixin, GroupMemberRequiredMixin
 
 
-class PaymentListView(ActiveMemberRequiredMixin, ListView):
+class PaymentListView(GroupMemberRequiredMixin, ListView):
     template_name = "payments/payment_list.html"
     context_object_name = "payments"
     paginate_by = 25

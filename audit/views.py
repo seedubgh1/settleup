@@ -1,9 +1,9 @@
 from django.views.generic import ListView
 from audit.models import AuditLog
-from groups.mixins import ActiveMemberRequiredMixin
+from groups.mixins import ActiveMemberRequiredMixin, GroupMemberRequiredMixin
 
 
-class AuditLogView(ActiveMemberRequiredMixin, ListView):
+class AuditLogView(GroupMemberRequiredMixin, ListView):
     model = AuditLog
     template_name = "audit/audit_log.html"
     context_object_name = "audit_logs"

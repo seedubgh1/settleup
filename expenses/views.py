@@ -4,11 +4,11 @@ from django.views.generic import ListView, DetailView, View
 from expenses.models import Expense, Category
 from expenses.forms import ExpenseForm, ExpenseSplitFormSet
 from expenses.services import create_expense, edit_expense, delete_expense
-from groups.mixins import ActiveMemberRequiredMixin, AdminRequiredMixin
+from groups.mixins import ActiveMemberRequiredMixin, AdminRequiredMixin, GroupMemberRequiredMixin
 from groups.models import GroupMember
 
 
-class ExpenseListView(ActiveMemberRequiredMixin, ListView):
+class ExpenseListView(GroupMemberRequiredMixin, ListView):
     template_name = "expenses/expense_list.html"
     context_object_name = "expenses"
     paginate_by = 25
@@ -54,7 +54,7 @@ class ExpenseListView(ActiveMemberRequiredMixin, ListView):
         return ctx
 
 
-class ExpenseDetailView(ActiveMemberRequiredMixin, DetailView):
+class ExpenseDetailView(GroupMemberRequiredMixin, DetailView):
     template_name = "expenses/expense_detail.html"
     context_object_name = "expense"
 

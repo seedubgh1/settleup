@@ -46,7 +46,7 @@ class GroupCreateView(LoginRequiredMixin, CreateView):
         return redirect("group_detail", group_id=group.pk)
 
 
-class GroupDetailView(ActiveMemberRequiredMixin, DetailView):
+class GroupDetailView(GroupMemberRequiredMixin, DetailView):
     template_name = "groups/group_detail.html"
 
     def get_object(self):
@@ -85,7 +85,7 @@ class GroupArchiveView(OwnerRequiredMixin, View):
         return redirect("group_list")
 
 
-class GroupMemberListView(ActiveMemberRequiredMixin, ListView):
+class GroupMemberListView(GroupMemberRequiredMixin, ListView):
     template_name = "groups/member_list.html"
     context_object_name = "memberships"
 
@@ -240,7 +240,7 @@ class RebalancePercentagesView(AdminRequiredMixin, View):
                 m.pk: form.cleaned_data[f"pct_{m.pk}"]
                 for m in members
             }
-            rebalance_percentages(self.group, percentages)
+            rebalance_percentages(self.group, percentages, acted_by=self.group_member)
             messages.success(request, "Percentages updated.")
             return redirect("member_list", group_id=self.group.pk)
         return render(request, self.template_name, {

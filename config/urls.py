@@ -5,7 +5,7 @@ from django.conf import settings
 from django.views.generic import RedirectView
 
 urlpatterns = [
-    # path("", RedirectView.as_view(url="/groups/", permanent=False)),
+    path("", RedirectView.as_view(url="/groups/", permanent=False)),
     path("admin/", admin.site.urls),
     path("", include("users.urls")),
     path("groups/", include("groups.urls")),
