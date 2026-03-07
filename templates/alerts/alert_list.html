@@ -25,9 +25,12 @@
     {% endfor %}
   </div>
   {% if is_paginated %}
-  <div class="flex justify-end gap-2 mt-4">
-    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="btn-secondary text-xs py-1 px-3">Previous</a>{% endif %}
-    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="btn-secondary text-xs py-1 px-3">Next</a>{% endif %}
+  <div class="flex items-center justify-between mt-4">
+    <span class="text-xs text-ink-dim">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    <div class="flex gap-2">
+      {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}" class="btn-secondary text-xs py-1 px-3">Previous</a>{% endif %}
+      {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}" class="btn-secondary text-xs py-1 px-3">Next</a>{% endif %}
+    </div>
   </div>
   {% endif %}
   {% else %}

@@ -20,7 +20,7 @@
     {% for membership in memberships %}
     <div class="flex items-center gap-4 px-6 py-4">
       <div class="w-9 h-9 rounded-full bg-accent-dim flex items-center justify-center text-accent text-sm font-bold flex-shrink-0">
-        {{ membership.user.first_name|first|upper }}{{ membership.user.last_name|first|upper }}
+        {{ membership.user|display_initials }}
       </div>
       <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2 flex-wrap">
