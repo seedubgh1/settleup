@@ -5,6 +5,9 @@ from users.models import User
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField(required=True)
+    first_name = forms.CharField(required=True, max_length=150)
+    last_name = forms.CharField(required=True, max_length=150)
+
 
     class Meta:
         model = User
