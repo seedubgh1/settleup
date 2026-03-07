@@ -49,7 +49,7 @@
       <form method="post" action="{% url 'payment_delete' group_id=group.pk payment_id=payment.pk %}">
         {% csrf_token %}
         <button type="submit" class="text-xs text-red-400 hover:text-red-300 ml-2"
-                onclick="return confirm('Delete this payment?')">Delete</button>
+                data-confirm="Delete this payment?">Delete</button>
       </form>
       {% endif %}
     </div>

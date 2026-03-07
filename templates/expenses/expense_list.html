@@ -72,7 +72,7 @@
         <form method="post" action="{% url 'expense_delete' group_id=group.pk expense_id=expense.pk %}">
           {% csrf_token %}
           <button type="submit" class="text-xs text-red-400 hover:text-red-300 transition-colors"
-                  onclick="return confirm('Delete this expense?')">Delete</button>
+                  data-confirm="Delete this expense?">Delete</button>
         </form>
         {% endif %}
       </div>

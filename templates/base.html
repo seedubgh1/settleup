@@ -232,5 +232,57 @@
 </div>
 {% endif %}
 
+<!-- Confirm Modal -->
+<div id="confirm-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60">
+  <div class="card w-full max-w-sm mx-4 p-6">
+    <p id="confirm-modal-message" class="text-sm text-ink mb-6">Are you sure?</p>
+    <div class="flex justify-end gap-3">
+      <button id="confirm-modal-cancel" class="btn-secondary">Cancel</button>
+      <button id="confirm-modal-confirm" class="btn-danger">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const modal = document.getElementById('confirm-modal');
+  const msgEl = document.getElementById('confirm-modal-message');
+  const cancelBtn = document.getElementById('confirm-modal-cancel');
+  const confirmBtn = document.getElementById('confirm-modal-confirm');
+  let _resolve = null;
+
+  function showConfirm(msg) {
+    return new Promise(function (resolve) {
+      msgEl.textContent = msg;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      _resolve = resolve;
+    });
+  }
+
+  function closeModal(result) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    if (_resolve) { _resolve(result); _resolve = null; }
+  }
+
+  cancelBtn.addEventListener('click', function () { closeModal(false); });
+  confirmBtn.addEventListener('click', function () { closeModal(true); });
+  modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(false); });
+
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-confirm]');
+    if (!btn) return;
+    e.preventDefault();
+    showConfirm(btn.dataset.confirm).then(function (confirmed) {
+      if (confirmed) {
+        const form = btn.closest('form');
+        if (form) { btn.removeAttribute('data-confirm'); form.submit(); }
+      }
+    });
+  });
+}());
+</script>
+
 </body>
 </html>

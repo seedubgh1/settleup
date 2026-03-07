@@ -57,7 +57,7 @@
         <form method="post" action="{% url 'member_deactivate' group_id=group.pk member_id=membership.pk %}">
           {% csrf_token %}
           <button type="submit" class="text-xs text-red-400 hover:text-red-300 transition-colors px-2 py-1 rounded hover:bg-surface-border"
-                  onclick="return confirm('Deactivate {{ membership.user.get_full_name }}?')">
+                  data-confirm="Deactivate {{ membership.user.get_full_name }}?">
             Deactivate
           </button>
         </form>
