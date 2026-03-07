@@ -44,7 +44,7 @@
         <p class="text-sm font-medium text-ink">{{ payment.paid_by.user.get_full_name }}</p>
         <p class="text-xs text-ink-dim">{{ payment.date }}{% if payment.notes %} · {{ payment.notes }}{% endif %}</p>
       </div>
-      <p class="text-sm font-mono font-semibold balance-owed">${{ payment.amount }}</p>
+      <p class="text-sm font-mono font-semibold balance-owed">${{ payment.amount|floatformat:2 }}</p>
       {% if group_member.role != 'member' %}
       <form method="post" action="{% url 'payment_delete' group_id=group.pk payment_id=payment.pk %}">
         {% csrf_token %}

@@ -14,3 +14,11 @@ def display_initials(user):
         parts = user.get_full_name().split()
         return ''.join(p[0].upper() for p in parts[:2])
     return user.email[0].upper()
+
+@register.filter
+def abs_value(value):
+    """Return the absolute value of a number."""
+    try:
+        return abs(value)
+    except (TypeError, ValueError):
+        return value

@@ -63,7 +63,7 @@
         </div>
         <p class="text-xs text-ink-dim">{{ expense.paid_by.user.get_full_name }} · {{ expense.date }} · {{ expense.category.name }}</p>
       </div>
-      <p class="text-sm font-mono font-semibold text-ink">${{ expense.amount }}</p>
+      <p class="text-sm font-mono font-semibold text-ink">${{ expense.amount|floatformat:2 }}</p>
       {% if not expense.is_deleted %}
       <div class="flex items-center gap-2 ml-2">
         <a href="{% url 'expense_edit' group_id=group.pk expense_id=expense.pk %}"
