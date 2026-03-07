@@ -1,6 +1,7 @@
 import pytest
 from decimal import Decimal
 from django.core.exceptions import ValidationError
+from django.urls import reverse
 
 from groups.models import Group, GroupMember
 from groups.services import (
@@ -119,3 +120,86 @@ class TestTransferOwnership:
         g["member_member"].refresh_from_db()
         assert g["member_member"].role == GroupMember.Role.OWNER
         assert g["owner_member"].role == GroupMember.Role.ADMIN
+
+
+# ---------------------------------------------------------------------------
+# Mixin tests — uses Django test client via pytest-django's `client` fixture
+# ---------------------------------------------------------------------------
+
+@pytest.mark.django_db
+class TestGroupMemberRequiredMixin:
+    """Non-members get 403; any member (even inactive) is allowed through."""
+
+    def test_non_member_gets_403(self, client, two_member_group):
+        from conftest import UserFactory
+        g = two_member_group
+        outsider = UserFactory()
+        client.force_login(outsider)
+        url = reverse("group_detail", kwargs={"group_id": g["group"].pk})
+        response = client.get(url)
+        assert response.status_code == 403
+
+    def test_member_gets_200(self, client, two_member_group):
+        g = two_member_group
+        client.force_login(g["member_user"])
+        url = reverse("group_detail", kwargs={"group_id": g["group"].pk})
+        response = client.get(url)
+        assert response.status_code == 200
+
+    def test_unauthenticated_redirects_to_login(self, client, two_member_group):
+        g = two_member_group
+        url = reverse("group_detail", kwargs={"group_id": g["group"].pk})
+        response = client.get(url)
+        assert response.status_code == 302
+        assert "/login/" in response["Location"] or "login" in response["Location"]
+
+
+@pytest.mark.django_db
+class TestActiveMemberRequiredMixin:
+    """Inactive members get 403; active members are allowed."""
+
+    def test_inactive_member_gets_403(self, client, two_member_group):
+        g = two_member_group
+        g["member_member"].status = GroupMember.Status.INACTIVE
+        g["member_member"].save()
+        client.force_login(g["member_user"])
+        # expense_add uses ActiveMemberRequiredMixin
+        url = reverse("expense_add", kwargs={"group_id": g["group"].pk})
+        response = client.get(url)
+        assert response.status_code == 403
+
+    def test_active_member_gets_200(self, client, two_member_group):
+        g = two_member_group
+        client.force_login(g["member_user"])
+        url = reverse("expense_add", kwargs={"group_id": g["group"].pk})
+        response = client.get(url)
+        assert response.status_code == 200
+
+
+@pytest.mark.django_db
+class TestAdminRequiredMixin:
+    """Regular members get 403; admins and owners are allowed."""
+
+    def test_member_gets_403(self, client, two_member_group):
+        g = two_member_group
+        client.force_login(g["member_user"])
+        # member_invite uses AdminRequiredMixin
+        url = reverse("member_invite", kwargs={"group_id": g["group"].pk})
+        response = client.get(url)
+        assert response.status_code == 403
+
+    def test_owner_gets_200(self, client, two_member_group):
+        g = two_member_group
+        client.force_login(g["owner_user"])
+        url = reverse("member_invite", kwargs={"group_id": g["group"].pk})
+        response = client.get(url)
+        assert response.status_code == 200
+
+    def test_admin_gets_200(self, client, two_member_group):
+        g = two_member_group
+        g["member_member"].role = GroupMember.Role.ADMIN
+        g["member_member"].save()
+        client.force_login(g["member_user"])
+        url = reverse("member_invite", kwargs={"group_id": g["group"].pk})
+        response = client.get(url)
+        assert response.status_code == 200

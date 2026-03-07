@@ -10,6 +10,8 @@ class GroupContextMixin(LoginRequiredMixin):
     self.group and self.group_member to the view.
     """
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
         self.group = get_object_or_404(Group, pk=kwargs["group_id"])
         try:
             self.group_member = GroupMember.objects.get(
