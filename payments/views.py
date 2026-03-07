@@ -1,3 +1,4 @@
+import datetime
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import ListView, View
@@ -31,7 +32,7 @@ class PaymentCreateView(ActiveMemberRequiredMixin, View):
     template_name = "payments/payment_form.html"
 
     def get(self, request, group_id):
-        form = PaymentForm()
+        form = PaymentForm(initial={"date": datetime.date.today()})
         return render(request, self.template_name, {
             "form": form, "group": self.group,
         })

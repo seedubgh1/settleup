@@ -1,3 +1,4 @@
+import datetime
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import ListView, DetailView, View
@@ -115,7 +116,7 @@ class ExpenseCreateView(ActiveMemberRequiredMixin, View):
     template_name = "expenses/expense_form.html"
 
     def get(self, request, group_id):
-        form = ExpenseForm()
+        form = ExpenseForm(initial={"date": datetime.date.today()})
         initial = _build_split_initial(self.group)
         formset = ExpenseSplitFormSet(initial=initial)
         return render(request, self.template_name, {
