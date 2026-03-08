@@ -31,7 +31,7 @@
         <div>
           <label class="form-label">Date</label>
           <input type="date" name="date" class="form-input"
-                 value="{{ form.date.value|default:'' }}" />
+                 value="{{ form.date.value|date:'Y-m-d' }}" />
           {% if form.date.errors %}<p class="text-xs text-red-400 mt-1">{{ form.date.errors|join:", " }}</p>{% endif %}
         </div>
       </div>
@@ -41,7 +41,7 @@
           <option value="">— Select category —</option>
           {% for cat in form.fields.category.queryset %}
           <option value="{{ cat.pk }}"
-            {% if form.category.value == cat.pk|stringformat:"s" %}selected{% endif %}>
+            {% if form.category.value|stringformat:"s" == cat.pk|stringformat:"s" %}selected{% endif %}>
             {{ cat.name }}
           </option>
           {% endfor %}
