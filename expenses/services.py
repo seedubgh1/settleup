@@ -11,8 +11,11 @@ def calculate_balance(group_member) -> Decimal:
     """
     Positive = member owes the pool.
     Negative = pool owes the member.
+
+    balance = sum of their expense splits (what they owe)
+            - sum of expenses they paid for (implicit credit)
+            - sum of explicit Payment records they made
     """
-    # from expenses.models import ExpenseSplit
     from payments.models import Payment
 
     total_owed = (
@@ -25,14 +28,24 @@ def calculate_balance(group_member) -> Decimal:
         or Decimal("0.00")
     )
 
-    total_paid = (
+    total_expense_paid = (
+        Expense.objects
+        .filter(
+            paid_by=group_member,
+            is_deleted=False,
+        )
+        .aggregate(total=db_models.Sum("amount"))["total"]
+        or Decimal("0.00")
+    )
+
+    total_payment_records = (
         Payment.objects
         .filter(paid_by=group_member)
         .aggregate(total=db_models.Sum("amount"))["total"]
         or Decimal("0.00")
     )
 
-    return total_owed - total_paid
+    return total_owed - total_expense_paid - total_payment_records
 
 
 def calculate_group_balances(group) -> list:

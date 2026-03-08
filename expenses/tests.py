@@ -36,8 +36,9 @@ class TestCalculateBalance:
             },
             splits=splits,
         )
-        # balance = split amount owed to pool (Payment model only, not expense paid_by)
-        assert calculate_balance(g["owner_member"]) == Decimal("60.00")
+        # owner paid $100, split is $60 → net = 60 - 100 = -40 (owed to owner)
+        assert calculate_balance(g["owner_member"]) == Decimal("-40.00")
+        # member paid nothing, split is $40 → net = 40
         assert calculate_balance(g["member_member"]) == Decimal("40.00")
 
     def test_payment_reduces_balance(self, two_member_group):
@@ -60,8 +61,8 @@ class TestCalculateBalance:
         )
         PaymentFactory(group=g["group"], paid_by=g["member_member"], amount=Decimal("40.00"))
         assert calculate_balance(g["member_member"]) == Decimal("0.00")
-        # owner's balance unchanged by member's payment
-        assert calculate_balance(g["owner_member"]) == Decimal("60.00")
+        # owner's balance: split $60 - paid expense $100 = -40, unaffected by member's payment
+        assert calculate_balance(g["owner_member"]) == Decimal("-40.00")
 
     def test_deleted_expense_excluded(self, two_member_group):
         g = two_member_group
