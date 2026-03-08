@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --font-family-sans: 'DM Sans', sans-serif;
+  --font-family-display: 'Playfair Display', serif;
+  --font-family-mono: 'DM Mono', monospace;
+
+  --color-surface: #0f1117;
+  --color-surface-raised: #161b27;
+  --color-surface-border: #1e2535;
+
+  --color-accent: #4ade80;
+  --color-accent-muted: #166534;
+  --color-accent-dim: #14532d;
+
+  --color-ink: #f1f5f9;
+  --color-ink-muted: #94a3b8;
+  --color-ink-dim: #475569;
+}
